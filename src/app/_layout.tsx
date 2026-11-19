@@ -1,11 +1,10 @@
 import { Stack } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import AuthGuard from "../components/AuthGuard";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
-
 
 // Like Next.js's app/layout.tsx: wraps every screen in the app.
 export default function RootLayout() {
@@ -38,16 +37,8 @@ function AppNavigation() {
       </Stack>
 
       {isLoading && (
-        <View
-          style={[
-            styles.loadingOverlay,
-            { backgroundColor: colors.bg },
-          ]}
-        >
-          <ActivityIndicator
-            size="large"
-            color={colors.primary}
-          />
+        <View style={[styles.loadingOverlay, { backgroundColor: colors.bg }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       )}
 
@@ -58,7 +49,7 @@ function AppNavigation() {
 
 const styles = StyleSheet.create({
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: "center",
     alignItems: "center",
   },

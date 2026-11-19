@@ -12,42 +12,47 @@ type Instrument = {
   name: string;
 };
 
+type profile = {
+  id: number;
+  email: string;
+};
+
 export default function HomeScreen() {
   return (
     <View style={{ flex: 1 }}>
       <Navbar />
-      <InstrumentList />
+      <ProfileList />
     </View>
   );
 }
 
-function InstrumentList() {
+function ProfileList() {
   const { colors, isDark } = useTheme();
   const styles = Styles(colors);
 
-  const [instruments, setInstruments] = useState<Instrument[]>([]);
+  const [profiles, setProfiles] = useState<profile[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getInstruments();
+    getProfiles();
   }, []);
 
   // Get the instruments from Supabase.
-  async function getInstruments() {
-    const { data, error } = await supabase.from("instruments").select();
+  async function getProfiles() {
+    const { data, error } = await supabase.from("Profile").select();
 
     if (error) {
       setError(error.message);
       return;
     }
 
-    setInstruments(data ?? []);
+    setProfiles(data ?? []);
   }
 
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.error}>Error loading instruments: {error}</Text>
+        <Text style={styles.error}>Error loading profile: {error}</Text>
       </View>
     );
   }
@@ -56,11 +61,9 @@ function InstrumentList() {
     <View style={styles.container}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <FlatList
-        data={instruments}
+        data={profiles}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <Text style={styles.item}>{item.name}</Text>
-        )}
+        renderItem={({ item }) => <Text style={styles.item}>{item.email}</Text>}
       />
     </View>
   );
