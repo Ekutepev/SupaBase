@@ -1,7 +1,7 @@
-import { useEffect } from "react";
 import { useRouter, useSegments } from "expo-router";
+import { useEffect } from "react";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthProvider";
 
 export default function AuthGuard() {
   const { session, isLoading } = useAuth();

@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, Pressable, Alert } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthProvider";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
 

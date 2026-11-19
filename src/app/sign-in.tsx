@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthProvider";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
 
