@@ -13,7 +13,7 @@ type Instrument = {
 };
 
 type profile = {
-  id: number;
+  id: string;
   email: string;
 };
 
@@ -39,7 +39,7 @@ function ProfileList() {
 
   // Get the instruments from Supabase.
   async function getProfiles() {
-    const { data, error } = await supabase.from("Profile").select();
+    const { data, error } = await supabase.from("profile").select();
 
     if (error) {
       setError(error.message);
