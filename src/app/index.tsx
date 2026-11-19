@@ -1,7 +1,6 @@
-import { Redirect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 
 import { supabase } from "../../lib/supabase";
 import Navbar from "../components/Navbar";
@@ -14,29 +13,6 @@ type Instrument = {
 };
 
 export default function HomeScreen() {
-  const [checking, setChecking] = useState(true);
-  const [signedIn, setSignedIn] = useState(false);
-
-  // On launch, look for a saved Supabase session.
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSignedIn(data.session !== null);
-      setChecking(false);
-    });
-  }, []);
-
-  if (checking) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (!signedIn) {
-    return <Redirect href="/sign-in" />;
-  }
-
   return (
     <View style={{ flex: 1 }}>
       <Navbar />
@@ -56,6 +32,7 @@ function InstrumentList() {
     getInstruments();
   }, []);
 
+  // Get the instruments from Supabase.
   async function getInstruments() {
     const { data, error } = await supabase.from("instruments").select();
 
@@ -81,7 +58,9 @@ function InstrumentList() {
       <FlatList
         data={instruments}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <Text style={styles.item}>{item.name}</Text>}
+        renderItem={({ item }) => (
+          <Text style={styles.item}>{item.name}</Text>
+        )}
       />
     </View>
   );
