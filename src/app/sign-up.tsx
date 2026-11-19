@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, router } from "expo-router";
-import { useState } from "react";
+import { Link } from "expo-router";
+import { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
 
@@ -13,7 +14,7 @@ const signUpSchema = z
   .object({
     email: z.email("Enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -24,6 +25,7 @@ type SignUpForm = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
   const { colors } = useTheme();
+  const { signUp } = useAuth();
   const styles = Styles(colors);
 
   const [loading, setLoading] = useState(false);
@@ -42,19 +44,16 @@ export default function SignUpScreen() {
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
-        return;
-      }
-      // If "Confirm email" is on in Supabase, there's no session until the user clicks the email link.
-      if (!data.session) {
+      const hasSession = await signUp(email, password);
+
+      // If email confirmation is enabled, the user must confirm first.
+      if (!hasSession) {
         setMessage("Check your email for a confirmation link, then sign in.");
-        return;
       }
-      router.replace("/");
+
+      // AuthGuard handles navigation if the user has a session.
     } catch {
-      setError("Can't reach the server. Check your connection and try again.");
+      setError("Unable to create account. Please try again.");
     } finally {
       setLoading(false);
     }
