@@ -1,4 +1,3 @@
-// Mirrors the "CaddyUp Colors" variables in Figma.
 // Keep the names identical so design and code stay in sync.
 
 export const light = {

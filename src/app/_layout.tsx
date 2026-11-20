@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import AuthGuard from "../components/AuthGuard";
+import Navbar from "../components/Navbar";
 import { AuthProvider, useAuth } from "../context/AuthProvider";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 
@@ -24,7 +25,8 @@ function AppNavigation() {
   const { colors } = useTheme();
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
+      {session && <Navbar />}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="sign-in" />
@@ -44,7 +46,7 @@ function AppNavigation() {
       )}
 
       <AuthGuard />
-    </>
+    </View>
   );
 }
 

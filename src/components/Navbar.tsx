@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { router } from "expo-router";
 import { useAuth } from "../context/AuthProvider";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
@@ -29,16 +30,35 @@ const Navbar = () => {
         }
     }
 
+    //Go to Profile Page
+
+
     return (
         // insets.top is this phone's status bar / notch height
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
             <View style={styles.headerContent}>
                 <View style={styles.userInfo}>
-                    <Text style={styles.title}>CaddyUp</Text>
-                    <Text style={styles.email} numberOfLines={1}>
-                        {user?.email}
-                    </Text>
+                    <Pressable
+                        onPress={() => router.push("/")}>
+                        <Text style={styles.title}>Caddy Up</Text>
+                    </Pressable>
                 </View>
+                <Text style={styles.email} numberOfLines={1}>
+                    {user?.email}
+                </Text>
+            </View>
+
+            <View style={styles.buttonConainer}>
+                <Pressable
+                    style={[styles.profileButton, { marginRight: "auto" }]}
+                    onPress={() => router.push("/")}>
+                    <Text style={styles.profileText}>Home</Text>
+                </Pressable>
+                <Pressable
+                    style={styles.profileButton}
+                    onPress={() => router.push("/profile")}>
+                    <Text style={styles.profileText}>Profile</Text>
+                </Pressable>
 
                 <Pressable
                     style={styles.signOutButton}
@@ -61,6 +81,7 @@ const Styles = (colors: Colors) => StyleSheet.create({
         paddingBottom: 12,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
+
     },
 
     headerContent: {
@@ -86,6 +107,11 @@ const Styles = (colors: Colors) => StyleSheet.create({
         marginTop: 4,
     },
 
+    buttonConainer: {
+        flexDirection: "row",
+        justifyContent: "flex-end"
+    },
+
     signOutButton: {
         backgroundColor: colors.primary,
         paddingHorizontal: 12,
@@ -94,6 +120,19 @@ const Styles = (colors: Colors) => StyleSheet.create({
     },
 
     signOutText: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: colors.onPrimary,
+    },
+
+    profileButton: {
+        backgroundColor: colors.primary,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 8,
+        marginRight: 8
+    },
+    profileText: {
         fontSize: 13,
         fontWeight: "600",
         color: colors.onPrimary,

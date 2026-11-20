@@ -3,14 +3,8 @@ import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 
 import { supabase } from "../../lib/supabase";
-import Navbar from "../components/Navbar";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
-
-type Instrument = {
-  id: number;
-  name: string;
-};
 
 type profile = {
   id: string;
@@ -20,7 +14,6 @@ type profile = {
 export default function HomeScreen() {
   return (
     <View style={{ flex: 1 }}>
-      <Navbar />
       <ProfileList />
     </View>
   );

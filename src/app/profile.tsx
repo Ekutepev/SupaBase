@@ -25,7 +25,7 @@ export default function Profile() {
 
     async function getProfile() {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profile")
         .select("display_name, favourite_instrument")
         .eq("id", userId)
         .single();
@@ -45,7 +45,7 @@ export default function Profile() {
   if (!profile) return <ActivityIndicator color={colors.primary} />;
 
   return (
-    <View style={styles.card}>
+    <View style={styles.container}>
       <Text style={styles.badge}>PRIVATE</Text>
       <Text style={styles.label}>Display name</Text>
       <Text style={styles.value}>{profile.display_name}</Text>
@@ -59,16 +59,15 @@ export default function Profile() {
 
 const Styles = (colors: Colors) =>
   StyleSheet.create({
-    card: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 12,
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+      paddingHorizontal: 16,
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
       padding: 16,
-      gap: 4,
     },
     badge: {
-      alignSelf: "flex-start",
       fontSize: 12,
       fontWeight: "700",
       color: colors.danger,
