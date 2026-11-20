@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 
+import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthProvider";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
@@ -22,6 +23,11 @@ const signUpSchema = z
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 
+type Instrument = {
+  id: number;
+  name: string;
+};
+
 export default function SignUpScreen() {
   const { colors } = useTheme();
   const { signUp } = useAuth();
@@ -30,6 +36,7 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [instrument, setInstrument] = useState<Instrument[]>([]);
 
   const { control, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
@@ -56,6 +63,22 @@ export default function SignUpScreen() {
     } finally {
       setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    loadInstruments();
+  }, []);
+
+  async function loadInstruments() {
+    const { data, error } = await supabase.from("instruments").select();
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    setInstrument(data ?? []);
+
   }
 
   return (
@@ -134,6 +157,15 @@ export default function SignUpScreen() {
       <Link href="/sign-in" style={styles.link}>
         Already have an account? Sign in
       </Link>
+
+      <View>
+        <Text style={styles.label}>Instruments</Text>
+        <FlatList
+          data={instrument}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => <Text style={styles.item}>{item.name}</Text>}
+        />
+      </View>
     </View>
   );
 }
@@ -195,5 +227,11 @@ const Styles = (colors: Colors) =>
       color: colors.skyText,
       textAlign: "center",
       marginTop: 24,
+    },
+    item: {
+      padding: 16,
+      color: colors.text,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
   });

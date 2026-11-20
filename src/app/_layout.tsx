@@ -33,6 +33,7 @@ function AppNavigation() {
 
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="index" />
+          <Stack.Screen name="profile" />
         </Stack.Protected>
       </Stack>
 
