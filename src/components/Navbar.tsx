@@ -48,7 +48,7 @@ const Navbar = () => {
                 </Text>
             </View>
 
-            <View style={styles.buttonConainer}>
+            <View style={styles.buttonContainer}>
                 <Pressable
                     style={[styles.profileButton, { marginRight: "auto" }]}
                     onPress={() => router.push("/")}>
@@ -107,7 +107,7 @@ const Styles = (colors: Colors) => StyleSheet.create({
         marginTop: 4,
     },
 
-    buttonConainer: {
+    buttonContainer: {
         flexDirection: "row",
         justifyContent: "flex-end"
     },

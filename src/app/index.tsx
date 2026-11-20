@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 
 import { supabase } from "../../lib/supabase";
 import type { Colors } from "../theme/colors";
@@ -25,21 +25,33 @@ function ProfileList() {
 
   const [profiles, setProfiles] = useState<profile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getProfiles();
   }, []);
 
-  // Get the instruments from Supabase.
+  // Get the profiles from Supabase.
   async function getProfiles() {
-    const { data, error } = await supabase.from("profile").select();
+    setLoading(true);
+    setError(null);
 
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const { data, error } = await supabase
+        .from("profile")
+        .select();
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      setProfiles(data ?? []);
+    } catch {
+      setError("Unable to load profiles.");
+    } finally {
+      setLoading(false);
     }
-
-    setProfiles(data ?? []);
   }
 
   if (error) {
@@ -53,11 +65,25 @@ function ProfileList() {
   return (
     <View style={styles.container}>
       <StatusBar style={isDark ? "light" : "dark"} />
-      <FlatList
-        data={profiles}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <Text style={styles.item}>{item.email}</Text>}
-      />
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+        />
+      ) : (
+        <FlatList
+          data={profiles}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Text style={styles.item}>{item.email}</Text>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.item}>
+              No profiles available.
+            </Text>
+          }
+        />
+      )}
     </View>
   );
 }

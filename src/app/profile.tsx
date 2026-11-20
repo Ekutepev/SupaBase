@@ -28,21 +28,41 @@ export default function Profile() {
         .from("profile")
         .select("display_name, favourite_instrument")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (cancelled) return;
-      if (error) setError(error.message);
-      else setProfile(data);
+      if (error) {
+        setError(error.message);
+      } else if (!data) {
+        setError("No profile found for this account.");
+      } else {
+        setProfile(data);
+      }
     }
 
-    getProfile();
+    if (userId) {
+      getProfile();
+    }
     return () => {
       cancelled = true;
     };
   }, [userId]);
 
-  if (error) return <Text style={styles.error}>Error: {error}</Text>;
-  if (!profile) return <ActivityIndicator color={colors.primary} />;
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.error}>Error: {error}</Text>
+      </View>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
