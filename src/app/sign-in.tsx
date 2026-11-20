@@ -38,8 +38,19 @@ export default function SignInScreen() {
       await signIn(email, password);
 
       // AuthGuard handles navigation after a successful sign-in.
-    } catch {
-      setError("Incorrect email or password.");
+    } catch (error: any) {
+      if (error.code === "invalid_credentials") {
+        setError("Incorrect email or password.");
+      } else if (error.code === "email_not_confirmed") {
+        setError("Please confirm your email before signing in.");
+      } else if (
+        error.message?.toLowerCase().includes("fetch") ||
+        error.message?.toLowerCase().includes("network")
+      ) {
+        setError("Network error. Check your internet connection.");
+      } else {
+        setError("Unable to sign in. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

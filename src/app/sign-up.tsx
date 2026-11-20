@@ -37,6 +37,7 @@ export default function SignUpScreen() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [instrument, setInstrument] = useState<Instrument[]>([]);
+  const [instrumentError, setInstrumentError] = useState<string | null>(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
@@ -52,14 +53,24 @@ export default function SignUpScreen() {
     try {
       const hasSession = await signUp(email, password);
 
-      // If email confirmation is enabled, the user must confirm first.
       if (!hasSession) {
         setMessage("Check your email for a confirmation link, then sign in.");
       }
 
-      // AuthGuard handles navigation if the user has a session.
-    } catch {
-      setError("Unable to create account. Please try again.");
+      // AuthGuard handles navigation after a successful sign-up.
+    } catch (error: any) {
+      if (error.code === "weak_password") {
+        setError("Password is too weak. Please choose a stronger password.");
+      } else if (error.code === "user_already_exists") {
+        setError("An account with this email already exists.");
+      } else if (
+        error.message?.toLowerCase().includes("fetch") ||
+        error.message?.toLowerCase().includes("network")
+      ) {
+        setError("Network error. Check your internet connection.");
+      } else {
+        setError("Unable to create account. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -70,15 +81,20 @@ export default function SignUpScreen() {
   }, []);
 
   async function loadInstruments() {
-    const { data, error } = await supabase.from("instruments").select();
+    try {
+      const { data, error } = await supabase
+        .from("instruments")
+        .select();
 
-    if (error) {
-      setError(error.message);
-      return;
+      if (error) {
+        setInstrumentError("Unable to load instruments.");
+        return;
+      }
+
+      setInstrument(data ?? []);
+    } catch {
+      setInstrumentError("Unable to load instruments.");
     }
-
-    setInstrument(data ?? []);
-
   }
 
   return (
@@ -160,10 +176,17 @@ export default function SignUpScreen() {
 
       <View>
         <Text style={styles.label}>Instruments</Text>
+
+        {instrumentError && (
+          <Text style={styles.error}>{instrumentError}</Text>
+        )}
+
         <FlatList
           data={instrument}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <Text style={styles.item}>{item.name}</Text>}
+          renderItem={({ item }) => (
+            <Text style={styles.item}>{item.name}</Text>
+          )}
         />
       </View>
     </View>
