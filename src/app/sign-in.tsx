@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 
-import { supabase } from "../../lib/supabase";
+import { useAuth } from "../context/AuthProvider";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
 
@@ -18,6 +18,7 @@ type SignInForm = z.infer<typeof signInSchema>;
 
 export default function SignInScreen() {
   const { colors } = useTheme();
+  const { signIn } = useAuth();
   const styles = Styles(colors);
 
   const [loading, setLoading] = useState(false);
@@ -28,20 +29,28 @@ export default function SignInScreen() {
     defaultValues: { email: "", password: "" },
   });
 
-  // Only runs when the form passes the Zod schema.
+  // Only runs when the form passes Zod validation.
   async function onSubmit({ email, password }: SignInForm) {
     setLoading(true);
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        setError(error.code === "invalid_credentials" ? "Incorrect email or password." : error.message);
-        return;
+      await signIn(email, password);
+
+      // AuthGuard handles navigation after a successful sign-in.
+    } catch (error: any) {
+      if (error.code === "invalid_credentials") {
+        setError("Incorrect email or password.");
+      } else if (error.code === "email_not_confirmed") {
+        setError("Please confirm your email before signing in.");
+      } else if (
+        error.message?.toLowerCase().includes("fetch") ||
+        error.message?.toLowerCase().includes("network")
+      ) {
+        setError("Network error. Check your internet connection.");
+      } else {
+        setError("Unable to sign in. Please try again.");
       }
-      router.replace("/");
-    } catch {
-      setError("Can't reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
     }

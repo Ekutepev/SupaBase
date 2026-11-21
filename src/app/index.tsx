@@ -1,76 +1,63 @@
-import { Redirect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 
 import { supabase } from "../../lib/supabase";
-import Navbar from "../components/Navbar";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
 
-type Instrument = {
-  id: number;
-  name: string;
+type profile = {
+  id: string;
+  email: string;
 };
 
 export default function HomeScreen() {
-  const [checking, setChecking] = useState(true);
-  const [signedIn, setSignedIn] = useState(false);
-
-  // On launch, look for a saved Supabase session.
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSignedIn(data.session !== null);
-      setChecking(false);
-    });
-  }, []);
-
-  if (checking) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (!signedIn) {
-    return <Redirect href="/sign-in" />;
-  }
-
   return (
     <View style={{ flex: 1 }}>
-      <Navbar />
-      <InstrumentList />
+      <ProfileList />
     </View>
   );
 }
 
-function InstrumentList() {
+function ProfileList() {
   const { colors, isDark } = useTheme();
   const styles = Styles(colors);
 
-  const [instruments, setInstruments] = useState<Instrument[]>([]);
+  const [profiles, setProfiles] = useState<profile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getInstruments();
+    getProfiles();
   }, []);
 
-  async function getInstruments() {
-    const { data, error } = await supabase.from("instruments").select();
+  // Get the profiles from Supabase.
+  async function getProfiles() {
+    setLoading(true);
+    setError(null);
 
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const { data, error } = await supabase
+        .from("profile")
+        .select();
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      setProfiles(data ?? []);
+    } catch {
+      setError("Unable to load profiles.");
+    } finally {
+      setLoading(false);
     }
-
-    setInstruments(data ?? []);
   }
 
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.error}>Error loading instruments: {error}</Text>
+        <Text style={styles.error}>Error loading profile: {error}</Text>
       </View>
     );
   }
@@ -78,11 +65,25 @@ function InstrumentList() {
   return (
     <View style={styles.container}>
       <StatusBar style={isDark ? "light" : "dark"} />
-      <FlatList
-        data={instruments}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <Text style={styles.item}>{item.name}</Text>}
-      />
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+        />
+      ) : (
+        <FlatList
+          data={profiles}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Text style={styles.item}>{item.email}</Text>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.item}>
+              No profiles available.
+            </Text>
+          }
+        />
+      )}
     </View>
   );
 }

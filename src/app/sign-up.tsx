@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, router } from "expo-router";
-import { useState } from "react";
+import { Link } from "expo-router";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../context/AuthProvider";
 import type { Colors } from "../theme/colors";
 import { useTheme } from "../theme/ThemeProvider";
 
@@ -13,7 +14,7 @@ const signUpSchema = z
   .object({
     email: z.email("Enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -22,13 +23,21 @@ const signUpSchema = z
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 
+type Instrument = {
+  id: number;
+  name: string;
+};
+
 export default function SignUpScreen() {
   const { colors } = useTheme();
+  const { signUp } = useAuth();
   const styles = Styles(colors);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [instrument, setInstrument] = useState<Instrument[]>([]);
+  const [instrumentError, setInstrumentError] = useState<string | null>(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
@@ -42,21 +51,49 @@ export default function SignUpScreen() {
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
-        return;
-      }
-      // If "Confirm email" is on in Supabase, there's no session until the user clicks the email link.
-      if (!data.session) {
+      const hasSession = await signUp(email, password);
+
+      if (!hasSession) {
         setMessage("Check your email for a confirmation link, then sign in.");
-        return;
       }
-      router.replace("/");
-    } catch {
-      setError("Can't reach the server. Check your connection and try again.");
+
+      // AuthGuard handles navigation after a successful sign-up.
+    } catch (error: any) {
+      if (error.code === "weak_password") {
+        setError("Password is too weak. Please choose a stronger password.");
+      } else if (error.code === "user_already_exists") {
+        setError("An account with this email already exists.");
+      } else if (
+        error.message?.toLowerCase().includes("fetch") ||
+        error.message?.toLowerCase().includes("network")
+      ) {
+        setError("Network error. Check your internet connection.");
+      } else {
+        setError("Unable to create account. Please try again.");
+      }
     } finally {
       setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadInstruments();
+  }, []);
+
+  async function loadInstruments() {
+    try {
+      const { data, error } = await supabase
+        .from("instruments")
+        .select();
+
+      if (error) {
+        setInstrumentError("Unable to load instruments.");
+        return;
+      }
+
+      setInstrument(data ?? []);
+    } catch {
+      setInstrumentError("Unable to load instruments.");
     }
   }
 
@@ -136,6 +173,22 @@ export default function SignUpScreen() {
       <Link href="/sign-in" style={styles.link}>
         Already have an account? Sign in
       </Link>
+
+      <View>
+        <Text style={styles.label}>Instruments</Text>
+
+        {instrumentError && (
+          <Text style={styles.error}>{instrumentError}</Text>
+        )}
+
+        <FlatList
+          data={instrument}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Text style={styles.item}>{item.name}</Text>
+          )}
+        />
+      </View>
     </View>
   );
 }
@@ -197,5 +250,11 @@ const Styles = (colors: Colors) =>
       color: colors.skyText,
       textAlign: "center",
       marginTop: 24,
+    },
+    item: {
+      padding: 16,
+      color: colors.text,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
   });
