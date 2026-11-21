@@ -51,6 +51,10 @@ RLS is enabled on both tables.
 - The **Profile** screen shows the signed-in user's display name and favourite instrument from the same row.
 - `profile` rows are created manually in the Supabase dashboard, using the user's Auth UUID as the `id`. A brand-new account created through the sign-up screen will be able to sign in, but it will see an empty Home list and a "No profile found" message on the Profile screen until a matching row is added.
 
+## Security Note
+
+A `.env` file containing the project URL and publishable key was accidentally committed early in the project's history. That key has since been revoked and replaced, and environment files are now excluded through `.gitignore`.
+
 ## Test Account
 
 A test account with a matching `profile` row has been set up for the instructor. The email, password, and `.env.local` values will be sent separately and are not committed to GitHub.
