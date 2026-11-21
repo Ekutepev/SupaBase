@@ -30,7 +30,6 @@ const Navbar = () => {
         }
     }
 
-    //Go to Profile Page
 
 
     return (
