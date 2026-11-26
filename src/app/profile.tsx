@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthProvider";
@@ -18,7 +25,53 @@ export default function Profile() {
   const { session } = useAuth();
   const userId = session?.user.id;
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [name, setName] = useState("");
+  const [instrument, setInstrument] = useState("");
+  const [save, setSave] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleEdit = () => {
+    if (!profile) return;
+    setName(profile.display_name ?? "");
+    setInstrument(profile.favourite_instrument ?? "");
+    setSaveError(null);
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!userId) return;
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setSaveError("Display name can't be empty.");
+      return;
+    }
+
+    setSave(true);
+    setSaveError(null);
+
+    const { data, error } = await supabase
+      .from("profile")
+      .update({
+        display_name: trimmedName,
+        favourite_instrument: instrument.trim() || null,
+      })
+      .eq("id", userId)
+      .select("display_name, favourite_instrument")
+      .single();
+
+    setSave(false);
+
+    if (error) {
+      setSaveError(error.message);
+      return;
+    }
+
+    setProfile(data);
+    setIsEditing(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -67,12 +120,55 @@ export default function Profile() {
   return (
     <View style={styles.container}>
       <Text style={styles.badge}>PRIVATE</Text>
+
       <Text style={styles.label}>Display name</Text>
-      <Text style={styles.value}>{profile.display_name}</Text>
+      {!isEditing ? (
+        <Text style={styles.value}>{profile.display_name}</Text>
+      ) : (
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          editable={!save}
+        />
+      )}
+
       <Text style={styles.label}>Favourite instrument</Text>
-      <Text style={styles.value}>
-        {profile.favourite_instrument ?? "None yet"}
-      </Text>
+      {!isEditing ? (
+        <Text style={styles.value}>
+          {profile.favourite_instrument ?? "none yet"}
+        </Text>
+      ) : (
+        <TextInput
+          style={styles.input}
+          value={instrument}
+          onChangeText={setInstrument}
+          editable={!save}
+        />
+      )}
+
+      {saveError && <Text style={styles.error}>{saveError}</Text>}
+
+      {!isEditing ? (
+        <Pressable onPress={handleEdit}>
+          <Text style={styles.action}>Edit</Text>
+        </Pressable>
+      ) : (
+        <>
+          <Pressable onPress={handleSave} disabled={save}>
+            <Text style={styles.action}>{save ? "Saving..." : "Save"}</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setSaveError(null);
+              setIsEditing(false);
+            }}
+            disabled={save}
+          >
+            <Text style={styles.action}>Cancel</Text>
+          </Pressable>
+        </>
+      )}
     </View>
   );
 }
@@ -105,5 +201,21 @@ const Styles = (colors: Colors) =>
     error: {
       fontSize: 13,
       color: colors.danger,
+    },
+    input: {
+      alignSelf: "stretch",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 12,
+      fontSize: 16,
+      color: colors.text,
+    },
+    action: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.skyText,
+      marginTop: 16,
     },
   });
